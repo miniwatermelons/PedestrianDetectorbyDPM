@@ -7,9 +7,13 @@
 #include <iostream>
 #include <fstream>
 
+
+
 using namespace cv;
 using namespace cv::dpm;
 using namespace std;
+
+const string model_path = "D:\\test\\dpm\\inriaperson.xml";
 
 int save_results(const string id, const vector<DPMDetector::ObjectDetection> ds, ofstream &out);
 
@@ -59,17 +63,14 @@ int main(int argc, char** argv)
 	};
 
 	CommandLineParser parser(argc, argv, keys);
-	//string model_path(parser.get<string>(0));
-	//string image_dir(parser.get<string>(1));
-	//string image_list = image_dir + "/files.txt";
 
-	//string model_path = "d:\\workspace\\vs_projects\\opencv_dpm\\opencv_dpm\\inriaperson.xml";
-	//string image_dir = "d:\\dataset\\inriaperson";
-	//string image_list = "d:\\dataset\\inriaperson\\test\\pos1.lst";
-
-	string model_path = "D:\\test\\dpm\\inriaperson.xml";
+	//args
+	/*string model_path = "D:\\test\\dpm\\inriaperson.xml";
 	string image_dir = "D:\\dataset";
-	string image_list = "D:\\test\\files";
+	string image_list = "D:\\test\\files";*/
+	
+	string image_dir = argv[1];
+	string image_list = argv[2];
 
 	if (model_path.empty() || image_dir.empty())
 	{
@@ -82,8 +83,7 @@ int main(int argc, char** argv)
 	vector<string> imgFileList;
 	if (!readImageLists(image_list, imgFileList))
 		return -1;
-	//cout << imgFileList[1] << endl;
-	cout << imgFileList.size() << endl;
+
 
 	for (int k = 0; k < imgFileList.size()-1; k++)
 	{
@@ -101,9 +101,7 @@ int main(int argc, char** argv)
 	cout << "Running without OpenMP and without TBB" << endl;
 #endif
 #endif
-	//cout << model_path << endl;
-	//cout << vector<string>(1, model_path)[0] << endl;
-	//vector<string> po{model_path};
+	
 	cv::Ptr<DPMDetector> detector = \
 		DPMDetector::create(vector<string>(1, model_path));
 	getchar();

@@ -162,6 +162,7 @@ void drawBoxes(Mat &frame, \
 		rectangle(frame, ds[i].rect, color, 2);
 		Mat dst = frame(ds[i].rect);
 		imshow("cut", dst);//注意需要加waitkey，否则会只显示最后切割的图片
+		imwrite("保存的图像.jpg", dst);
 		waitKey(0);
 	}
 

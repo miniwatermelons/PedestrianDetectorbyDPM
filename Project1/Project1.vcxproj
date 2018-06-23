@@ -116,7 +116,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="WindowsShow.cpp" />
+    <ClCompile Include="PedestrianDetectorbyDPM.cpp" />
     <ClCompile Include="源1.cpp" />
   </ItemGroup>
   <ItemGroup>

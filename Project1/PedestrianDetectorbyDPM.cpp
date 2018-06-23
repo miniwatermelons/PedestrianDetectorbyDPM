@@ -52,10 +52,17 @@ void drawBoxes(Mat &frame,
 	Scalar color,
 	string text);
 
+void storeBoxes(Mat &frame, \
+	vector<DPMDetector::ObjectDetection> ds, 
+	Scalar color, 
+	string text, 
+	size_t i);
+
 int main(int argc, char** argv)
 {
-
+	
 	waitKey(0);
+
 	const char* keys =
 	{
 		"{@model_path    | | Path of the DPM cascade model}"
@@ -85,13 +92,13 @@ int main(int argc, char** argv)
 		return -1;
 
 
-	for (int k = 0; k < imgFileList.size()-1; k++)
-	{
-		cout << imgFileList[k].size() << ' ';
-	}
-	
-	cout << endl;
-	cout << (int)imgFileList[9].size() << endl;
+	//for (int k = 0; k < imgFileList.size()-1; k++)
+	//{
+	//	cout << imgFileList[k].size() << ' ';
+	//}
+	//
+	//cout << endl;
+	//cout << (int)imgFileList[9].size() << endl;
 #ifdef HAVE_TBB
 	cout << "Running with TBB" << endl;
 #else
@@ -101,30 +108,32 @@ int main(int argc, char** argv)
 	cout << "Running without OpenMP and without TBB" << endl;
 #endif
 #endif
+
+	cout << "press any key to continue";
 	
 	cv::Ptr<DPMDetector> detector = \
 		DPMDetector::create(vector<string>(1, model_path));
 	getchar();
 
 
-	namedWindow("DPM Cascade Detection", 1);
+	//namedWindow("DPM Cascade Detection", 1);
 	// the color of the rectangle
 	Scalar color(0, 255, 255); // yellow
 	Mat frame;
 
-	for (size_t i = 0; i < imgFileList.size(); i++)
+	for (size_t i = 0; i < imgFileList.size()-1; i++)
 	{
 		double t = (double)getTickCount();
 		vector<DPMDetector::ObjectDetection> ds;
 
 		string imageFile = image_dir + "\\" + imgFileList[i];
 	
-		getchar();
+		//getchar();
 		Mat image = imread(imageFile);
-		if (image.empty()) {
+		/*if (image.empty()) {
 			cerr << "\nInvalid image:\n" << imgFileList[i] << endl;
 		}
-		imshow("show", image);
+		imshow("show", image);*/
 
 		frame = image.clone();
 
@@ -140,15 +149,9 @@ int main(int argc, char** argv)
 		cout << t << endl;
 		// draw boxes
 		string text = format("%0.1f fps", 1.0 / t);
-		drawBoxes(frame, ds, color, text);
+		//drawBoxes(frame, ds, color, text);
+		storeBoxes(frame, ds, color, text, i);
 
-		// show detections
-		imshow("DPM Cascade Detection", frame);
-
-		waitKey(0);
-
-		//if ( waitKey(30) >= 0)
-		//    break;
 	}
 	system("pause");
 	return 0;
@@ -162,11 +165,26 @@ void drawBoxes(Mat &frame, \
 		rectangle(frame, ds[i].rect, color, 2);
 		Mat dst = frame(ds[i].rect);
 		imshow("cut", dst);//注意需要加waitkey，否则会只显示最后切割的图片
-		imwrite("保存的图像.jpg", dst);
+
 		waitKey(0);
 	}
 
 	// draw text on image
 	Scalar textColor(0, 0, 250);
 	putText(frame, text, Point(10, 50), FONT_HERSHEY_PLAIN, 2, textColor, 2);
+}
+
+void storeBoxes(Mat &frame, \
+	vector<DPMDetector::ObjectDetection> ds, Scalar color, string text, size_t i)
+{
+	for (unsigned int j = 0; j < ds.size(); j++)
+	{
+		//rectangle(frame, ds[j].rect, color, 0);
+		Mat dst = frame(ds[j].rect);
+
+		char ImagePathName[100];
+		sprintf_s(ImagePathName, "%s%zd_%d%s", "..\\getPedestrianimage\\image", i, j, ".jpg");   //指定保存路径
+		imwrite(ImagePathName, dst);  //保存图像
+	}
+
 }

@@ -7,6 +7,11 @@
 #include <iostream>
 #include <fstream>
 
+#include<vector>
+
+#include <io.h>
+#include <string>
+#include <sstream>
 
 
 using namespace cv;
@@ -56,13 +61,13 @@ void storeBoxes(Mat &frame, \
 	vector<DPMDetector::ObjectDetection> ds, 
 	Scalar color, 
 	string text, 
-	size_t i);
+	size_t i,
+	string output_dir);
+
+void getFiles(string path, vector<string>& files);
 
 int main(int argc, char** argv)
 {
-	
-	waitKey(0);
-
 	const char* keys =
 	{
 		"{@model_path    | | Path of the DPM cascade model}"
@@ -77,7 +82,12 @@ int main(int argc, char** argv)
 	string image_list = "D:\\test\\files";*/
 	
 	string image_dir = argv[1];
-	string image_list = argv[2];
+
+	string image_list = argv[1];
+
+	string output_dir = argv[2];
+	cout <<"input dir is： "<< output_dir << endl;
+	cout <<"output dir is: "<<output_dir << endl;
 
 	if (model_path.empty() || image_dir.empty())
 	{
@@ -87,9 +97,16 @@ int main(int argc, char** argv)
 
 
 
-	vector<string> imgFileList;
-	if (!readImageLists(image_list, imgFileList))
-		return -1;
+	//vector<string> imgFileList;
+	//if (!readImageLists(image_list, imgFileList))
+	//	return -1;
+
+	//string imgfile = "..\\srcImg";
+	vector<string>imgFileList;
+	getFiles(image_list, imgFileList);
+	for (int i = 0; i<imgFileList.size(); i++) {
+		cout << imgFileList.at(i) << endl;
+	}
 
 
 	//for (int k = 0; k < imgFileList.size()-1; k++)
@@ -109,11 +126,10 @@ int main(int argc, char** argv)
 #endif
 #endif
 
-	cout << "press any key to continue";
+	
 	
 	cv::Ptr<DPMDetector> detector = \
 		DPMDetector::create(vector<string>(1, model_path));
-	getchar();
 
 
 	//namedWindow("DPM Cascade Detection", 1);
@@ -126,7 +142,8 @@ int main(int argc, char** argv)
 		double t = (double)getTickCount();
 		vector<DPMDetector::ObjectDetection> ds;
 
-		string imageFile = image_dir + "\\" + imgFileList[i];
+		//gstring imageFile = image_dir + "\\" + imgFileList[i];
+		string imageFile = imgFileList[i];
 	
 		//getchar();
 		Mat image = imread(imageFile);
@@ -150,7 +167,7 @@ int main(int argc, char** argv)
 		// draw boxes
 		string text = format("%0.1f fps", 1.0 / t);
 		//drawBoxes(frame, ds, color, text);
-		storeBoxes(frame, ds, color, text, i);
+		storeBoxes(frame, ds, color, text, i, output_dir);
 
 	}
 	system("pause");
@@ -175,7 +192,7 @@ void drawBoxes(Mat &frame, \
 }
 
 void storeBoxes(Mat &frame, \
-	vector<DPMDetector::ObjectDetection> ds, Scalar color, string text, size_t i)
+	vector<DPMDetector::ObjectDetection> ds, Scalar color, string text, size_t i, string output_dir)
 {
 	for (unsigned int j = 0; j < ds.size(); j++)
 	{
@@ -183,8 +200,36 @@ void storeBoxes(Mat &frame, \
 		Mat dst = frame(ds[j].rect);
 
 		char ImagePathName[100];
-		sprintf_s(ImagePathName, "%s%zd_%d%s", "..\\getPedestrianimage\\image", i, j, ".jpg");   //指定保存路径
+		sprintf_s(ImagePathName, "%s\\%zd_%d%s", output_dir.c_str(), i, j, ".jpg");   //指定保存路径
+		cout <<"generate image:"<<ImagePathName << endl;
 		imwrite(ImagePathName, dst);  //保存图像
 	}
 
+}
+
+void getFiles(string path, vector<string>& files)
+{
+	//文件句柄  
+	intptr_t  hFile = 0;
+	//文件信息  
+	struct _finddata_t fileinfo;
+	string p;
+	if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
+	{
+		do
+		{
+			//如果是目录,迭代之  
+			//如果不是,加入列表  
+			if ((fileinfo.attrib &  _A_SUBDIR))
+			{
+				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
+					getFiles(p.assign(path).append("\\").append(fileinfo.name), files);
+			}
+			else
+			{
+				files.push_back(p.assign(path).append("\\").append(fileinfo.name));
+			}
+		} while (_findnext(hFile, &fileinfo) == 0);
+		_findclose(hFile);
+	}
 }

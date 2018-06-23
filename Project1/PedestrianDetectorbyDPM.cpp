@@ -66,6 +66,8 @@ void storeBoxes(Mat &frame, \
 
 void getFiles(string path, vector<string>& files);
 
+vector<string> getFilesCompatible(string cate_dir);
+
 int main(int argc, char** argv)
 {
 	const char* keys =
@@ -86,7 +88,7 @@ int main(int argc, char** argv)
 	string image_list = argv[1];
 
 	string output_dir = argv[2];
-	cout <<"input dir is： "<< output_dir << endl;
+	cout <<"input dir is： "<< image_dir << endl;
 	cout <<"output dir is: "<<output_dir << endl;
 
 	if (model_path.empty() || image_dir.empty())
@@ -103,12 +105,18 @@ int main(int argc, char** argv)
 
 	//string imgfile = "..\\srcImg";
 	vector<string>imgFileList;
-	getFiles(image_list, imgFileList);
+	/*getFiles(image_list, imgFileList);
 	for (int i = 0; i<imgFileList.size(); i++) {
 		cout << imgFileList.at(i) << endl;
+	}*/
+	
+	imgFileList = getFilesCompatible(image_dir);
+	for (int t = 0; t<imgFileList.size(); t++)
+	{
+		cout << imgFileList[t] << endl;
 	}
 
-
+	cout << "**********************************" << endl;
 	//for (int k = 0; k < imgFileList.size()-1; k++)
 	//{
 	//	cout << imgFileList[k].size() << ' ';
@@ -232,4 +240,77 @@ void getFiles(string path, vector<string>& files)
 		} while (_findnext(hFile, &fileinfo) == 0);
 		_findclose(hFile);
 	}
+}
+
+vector<string> getFilesCompatible(string cate_dir)
+{
+	vector<string> files;//存放文件名  
+	cout << "^^^^^^^^^^^^^^^^^" << endl;
+#ifdef _WIN64  
+	struct _finddata_t file;
+	intptr_t lf=0;
+	//输入文件夹路径  
+	string p;
+	if ((lf = _findfirst(p.assign(cate_dir).append("\\*").c_str(), &file)) == -1) {
+		cout << cate_dir << " not found!!!" << endl;
+	}
+	else {
+
+		do
+		{
+			//如果是目录,迭代之  
+			//如果不是,加入列表  
+			if ((file.attrib &  _A_SUBDIR))
+			{
+				if (strcmp(file.name, ".") != 0 && strcmp(file.name, "..") != 0)
+					getFiles(p.assign(cate_dir).append("\\").append(file.name), files);
+			}
+			else
+			{
+				files.push_back(p.assign(cate_dir).append("\\").append(file.name));
+			}
+		} while (_findnext(lf, &file) == 0);
+	}
+	_findclose(lf);
+#endif  
+
+#ifdef linux  
+	DIR *dir;
+	struct dirent *ptr;
+	char base[1000];
+
+	if ((dir = opendir(cate_dir.c_str())) == NULL)
+	{
+		perror("Open dir error...");
+		exit(1);
+	}
+
+	while ((ptr = readdir(dir)) != NULL)
+	{
+		if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0)    ///current dir OR parrent dir  
+			continue;
+		else if (ptr->d_type == 8)    ///file  
+									  //printf("d_name:%s/%s\n",basePath,ptr->d_name);  
+			files.push_back(ptr->d_name);
+		else if (ptr->d_type == 10)    ///link file  
+									   //printf("d_name:%s/%s\n",basePath,ptr->d_name);  
+			continue;
+		else if (ptr->d_type == 4)    ///dir  
+		{
+			files.push_back(ptr->d_name);
+			/*
+			memset(base,'\0',sizeof(base));
+			strcpy(base,basePath);
+			strcat(base,"/");
+			strcat(base,ptr->d_nSame);
+			readFileList(base);
+			*/
+		}
+	}
+	closedir(dir);
+#endif  
+
+	//排序，按从小到大排序  
+	sort(files.begin(), files.end());
+	return files;
 }

@@ -18,7 +18,8 @@ using namespace cv;
 using namespace cv::dpm;
 using namespace std;
 
-const string model_path = "D:\\test\\dpm\\inriaperson.xml";
+const string model_path = "D:\\Code\\Library\\external_library\\dpm\\inriaperson.xml";
+
 
 int save_results(const string id, const vector<DPMDetector::ObjectDetection> ds, ofstream &out);
 
@@ -63,6 +64,8 @@ void storeBoxes(Mat &frame, \
 	string text, 
 	size_t i,
 	string output_dir);
+
+bool isInside(Rect rect1, Rect rect2);
 
 void getFiles(string path, vector<string>& files);
 
@@ -205,15 +208,28 @@ void storeBoxes(Mat &frame, \
 	for (unsigned int j = 0; j < ds.size(); j++)
 	{
 		//rectangle(frame, ds[j].rect, color, 0);
-		Mat dst = frame(ds[j].rect);
+		Rect frame_rect(0, 0, frame.cols, frame.rows);
+		if (isInside(ds[j].rect, frame_rect))
+		{
+			Mat dst = frame(ds[j].rect);
 
-		char ImagePathName[100];
-		sprintf_s(ImagePathName, "%s\\%zd_%d%s", output_dir.c_str(), i, j, ".jpg");   //指定保存路径
-		cout <<"generate image:"<<ImagePathName << endl;
-		imwrite(ImagePathName, dst);  //保存图像
+			char ImagePathName[100];
+			sprintf_s(ImagePathName, "%s\\%zd_%d%s", output_dir.c_str(), i, j, ".jpg");   //指定保存路径
+			cout << "generate image:" << ImagePathName << endl;
+			imwrite(ImagePathName, dst);  //保存图像
+		}
+
+		
 	}
 
 }
+
+//OpenCV里貌似没有判断rect1是否在rect2里面的功能，所以自己写一个吧,引用自别的代码
+bool isInside(Rect rect1, Rect rect2)
+{
+	return (rect1 == (rect1&rect2));
+}
+
 
 void getFiles(string path, vector<string>& files)
 {
